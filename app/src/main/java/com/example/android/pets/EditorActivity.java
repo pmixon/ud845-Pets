@@ -15,10 +15,14 @@
  */
 package com.example.android.pets;
 
+import android.content.ContentValues;
+import android.content.Intent;
+import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,7 +31,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
+import com.example.android.pets.data.PetContract;
 import com.example.android.pets.data.PetContract.PetEntry;
 import com.example.android.pets.data.PetDbHelper;
 
@@ -35,6 +41,8 @@ import com.example.android.pets.data.PetDbHelper;
  * Allows user to create a new pet or edit an existing one.
  */
 public class EditorActivity extends AppCompatActivity {
+
+    public static final String CREATED_COLUMN_INTENT = "com.example.android.pets.CREATED_COLUMN_NUMBER";
 
     /** EditText field to enter the pet's name */
     private EditText mNameEditText;
@@ -115,16 +123,49 @@ public class EditorActivity extends AppCompatActivity {
         return true;
     }
 
+    private void insertNewPet() {
+
+        String petName = mNameEditText.getText().toString();
+        String breed = mBreedEditText.getText().toString();
+        String selectedSex = mGenderSpinner.getSelectedItem().toString();
+
+        if (selectedSex == getString(R.string.gender_male)) {
+            mGender = 1;
+        }
+        else if (selectedSex == getString(R.string.gender_female)) {
+            mGender = 2;
+        }
+
+        String weightString = mWeightEditText.getText().toString();
+
+        int weight = Integer.parseInt(weightString);
+
+        PetDbHelper mDbHelper = new PetDbHelper(this);
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(PetContract.PetEntry.COLUMN_PET_NAME, petName);
+        values.put(PetContract.PetEntry.COLUMN_PET_BREED, breed);
+        values.put(PetContract.PetEntry.COLUMN_PET_GENDER, mGender);
+        values.put(PetContract.PetEntry.COLUMN_PET_WEIGHT, weight);
+        long createdColumnNum = db.insert(PetEntry.TABLE_NAME, null, values);
+
+
+        if (createdColumnNum == -1) {
+
+        } else {
+            Toast.makeText(this, Long.toString(createdColumnNum), Toast.LENGTH_LONG).show();
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // User clicked on a menu option in the app bar overflow menu
         switch (item.getItemId()) {
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
-                // Do nothing for now
-                PetDbHelper mDbHelper = new PetDbHelper(this);
-                SQLiteDatabase db = mDbHelper.getReadableDatabase();
-                db.execSQL("");
+                insertNewPet();
+                finish();
 
                 return true;
             // Respond to a click on the "Delete" menu option
@@ -138,5 +179,10 @@ public class EditorActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void finish() {
+        Intent intent = new Intent(EditorActivity.this, CatalogActivity.class);
+        startActivity(intent);
     }
 }
