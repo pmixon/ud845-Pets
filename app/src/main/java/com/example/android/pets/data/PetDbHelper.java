@@ -10,15 +10,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class PetDbHelper extends SQLiteOpenHelper {
 
-    public static final String LOG_TAG = PetDbHelper.class.getSimpleName();
-
-    private static final String CREATE_DB = "CREATE TABLE pets (" +
-            "_id INTEGER," +
-            " name TEXT," +
-            " breed TEXT," +
-            " gender INTEGER," +
-            " weight INTEGER)";
-
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "shelter.db";
 
@@ -29,7 +20,15 @@ public class PetDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
-        sqLiteDatabase.execSQL(CREATE_DB);
+        // Create a String that contains the SQL statement to create the pets table
+        String SQL_CREATE_PETS_TABLE =  "CREATE TABLE " + PetContract.PetEntry.TABLE_NAME + " ("
+                + PetContract.PetEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + PetContract.PetEntry.COLUMN_PET_NAME + " TEXT NOT NULL, "
+                + PetContract.PetEntry.COLUMN_PET_BREED + " TEXT, "
+                + PetContract.PetEntry.COLUMN_PET_GENDER + " INTEGER NOT NULL, "
+                + PetContract.PetEntry.COLUMN_PET_WEIGHT + " INTEGER NOT NULL DEFAULT 0);";
+
+        sqLiteDatabase.execSQL(SQL_CREATE_PETS_TABLE);
     }
 
     @Override
