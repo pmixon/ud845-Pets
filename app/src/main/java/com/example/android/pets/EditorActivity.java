@@ -19,6 +19,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -136,26 +137,32 @@ public class EditorActivity extends AppCompatActivity {
             mGender = 2;
         }
 
-        String weightString = mWeightEditText.getText().toString();
+        String weightString = mWeightEditText.getText().toString().trim();
 
         int weight = Integer.parseInt(weightString);
 
-        PetDbHelper mDbHelper = new PetDbHelper(this);
-        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+//        PetDbHelper mDbHelper = new PetDbHelper(this);
+//        SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(PetContract.PetEntry.COLUMN_PET_NAME, petName);
         values.put(PetContract.PetEntry.COLUMN_PET_BREED, breed);
         values.put(PetContract.PetEntry.COLUMN_PET_GENDER, mGender);
         values.put(PetContract.PetEntry.COLUMN_PET_WEIGHT, weight);
-        long createdColumnNum = db.insert(PetEntry.TABLE_NAME, null, values);
+//        long createdColumnNum = db.insert(PetEntry.TABLE_NAME, null, values);
+        Uri createdColumnUri = getContentResolver().insert(PetEntry.CONTENT_URI,values);
 
-
-        if (createdColumnNum == -1) {
-
+        if (createdColumnUri == null) {
+            Toast.makeText(this, R.string.error_saving_pet_message, Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, Long.toString(createdColumnNum), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.pet_saved_message, Toast.LENGTH_SHORT).show();
         }
+        
+//        if (createdColumnNum == -1) {
+//
+//        } else {
+//            Toast.makeText(this, Long.toString(createdColumnNum), Toast.LENGTH_LONG).show();
+//        }
     }
 
     @Override

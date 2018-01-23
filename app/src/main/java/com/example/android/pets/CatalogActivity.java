@@ -15,10 +15,12 @@
  */
 package com.example.android.pets;
 
+import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ShareCompat;
@@ -31,6 +33,7 @@ import android.widget.Toast;
 
 import com.example.android.pets.data.PetContract;
 import com.example.android.pets.data.PetDbHelper;
+import com.example.android.pets.data.PetProvider;
 
 /**
  * Displays list of pets that were entered and stored in the app.
@@ -97,22 +100,22 @@ public class CatalogActivity extends AppCompatActivity {
         PetDbHelper mDbHelper = new PetDbHelper(this);
 
         // Create and/or open a database to read from it
-        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+//        SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
         TextView displayView = (TextView) findViewById(R.id.text_view_pet);
 
         // Perform this raw SQL query "SELECT * FROM pets"
         // to get a Cursor that contains all rows from the pets table.
-        Cursor cursor = db.rawQuery("SELECT * FROM " + PetContract.PetEntry.TABLE_NAME, null);
-        try {
-            // Display the number of rows in the Cursor (which reflects the number of rows in the
-            // pets table in the database).
-            displayView.setText("Number of rows in pets database table: " + cursor.getCount());
-        } finally {
-            // Always close the cursor when you're done reading from it. This releases all its
-            // resources and makes it invalid.
-            cursor.close();
-        }
+//        Cursor cursor = db.rawQuery("SELECT * FROM " + PetContract.PetEntry.TABLE_NAME, null);
+//        try {
+//            // Display the number of rows in the Cursor (which reflects the number of rows in the
+//            // pets table in the database).
+//            displayView.setText("Number of rows in pets database table: " + cursor.getCount());
+//        } finally {
+//            // Always close the cursor when you're done reading from it. This releases all its
+//            // resources and makes it invalid.
+//            cursor.close();
+//        }
 
         String[] projection = {
                 PetContract.PetEntry._ID,
@@ -122,14 +125,21 @@ public class CatalogActivity extends AppCompatActivity {
                 PetContract.PetEntry.COLUMN_PET_WEIGHT
         };
 
-        Cursor petInfoCursor = db.query(PetContract.PetEntry.TABLE_NAME, projection,null,null,null,null,null);
+        Cursor petInfoCursor = getContentResolver().query(
+                PetContract.PetEntry.CONTENT_URI,
+                projection,
+                null,
+                null,
+                null);
 
-        int cursorIdIndex = cursor.getColumnIndex(PetContract.PetEntry._ID);
+//        Cursor petInfoCursor = db.query(PetContract.PetEntry.TABLE_NAME, projection,null,null,null,null,null);
 
-        int cursorPetNameIndex = cursor.getColumnIndex(PetContract.PetEntry.COLUMN_PET_NAME);
-        int cursorPetBreedIndex = cursor.getColumnIndex(PetContract.PetEntry.COLUMN_PET_BREED);
-        int cursorPetGenderIndex = cursor.getColumnIndex(PetContract.PetEntry.COLUMN_PET_GENDER);
-        int cursorPetWeightIndex = cursor.getColumnIndex(PetContract.PetEntry.COLUMN_PET_WEIGHT);
+        int cursorIdIndex = petInfoCursor.getColumnIndex(PetContract.PetEntry._ID);
+
+        int cursorPetNameIndex = petInfoCursor.getColumnIndex(PetContract.PetEntry.COLUMN_PET_NAME);
+        int cursorPetBreedIndex = petInfoCursor.getColumnIndex(PetContract.PetEntry.COLUMN_PET_BREED);
+        int cursorPetGenderIndex = petInfoCursor.getColumnIndex(PetContract.PetEntry.COLUMN_PET_GENDER);
+        int cursorPetWeightIndex = petInfoCursor.getColumnIndex(PetContract.PetEntry.COLUMN_PET_WEIGHT);
 
 
         try {
