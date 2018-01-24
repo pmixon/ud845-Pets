@@ -2,6 +2,7 @@ package com.example.android.pets;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,8 @@ import android.widget.TextView;
 
 import com.example.android.pets.R;
 import com.example.android.pets.data.PetContract;
+
+import org.w3c.dom.Text;
 
 /**
  * Created by pmixon on 1/23/18.
@@ -36,6 +39,10 @@ public class PetCursorAdapter extends CursorAdapter {
 
         TextView nameTextView = (TextView) view.findViewById(R.id.pet_name);
         TextView breedTextView = (TextView) view.findViewById(R.id.pet_breed);
+
+        if (TextUtils.isEmpty(breed)) {
+            breed = "Unknown breed";
+        }
 
         nameTextView.setText(name);
         breedTextView.setText(breed);

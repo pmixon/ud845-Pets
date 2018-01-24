@@ -15,9 +15,11 @@
  */
 package com.example.android.pets;
 
+import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.ContentValues;
 import android.content.CursorLoader;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.content.res.Resources;
@@ -31,6 +33,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -42,6 +45,8 @@ import android.widget.Toast;
 import com.example.android.pets.data.PetContract;
 import com.example.android.pets.data.PetContract.PetEntry;
 import com.example.android.pets.data.PetDbHelper;
+
+import org.w3c.dom.Text;
 
 /**
  * Allows user to create a new pet or edit an existing one.
@@ -69,7 +74,17 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     private int mGender = 0;
     private Uri mCurrentPetUri;
 
+    private boolean mPetHasChanged = false;
+
     static final int PET_EDIT_LOADER = 1;
+
+    private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            mPetHasChanged = true;
+            return false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +97,12 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mWeightEditText = (EditText) findViewById(R.id.edit_pet_weight);
         mGenderSpinner = (Spinner) findViewById(R.id.spinner_gender);
 
+
+        mNameEditText.setOnTouchListener(mTouchListener);
+        mBreedEditText.setOnTouchListener(mTouchListener);
+        mWeightEditText.setOnTouchListener(mTouchListener);
+        mGenderSpinner.setOnTouchListener(mTouchListener);
+
         setupSpinner();
 
         Intent intent = this.getIntent();
@@ -89,12 +110,23 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
         if (mCurrentPetUri == null) {
             setTitle(getString(R.string.new_pet_title));
+            invalidateOptionsMenu();
+
         } else {
             Toast.makeText(this, mCurrentPetUri.toString(), Toast.LENGTH_LONG).show();
             setTitle(getString(R.string.edit_pet_title));
             getLoaderManager().initLoader(PET_EDIT_LOADER,null,this);
         }
 
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if (mCurrentPetUri == null) {
+            MenuItem menuItem = menu.findItem(R.id.action_delete);
+            menuItem.setVisible(false);
+        }
+        return true;
     }
 
     /**
@@ -149,6 +181,11 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         String petName = mNameEditText.getText().toString();
         String breed = mBreedEditText.getText().toString();
         String selectedSex = mGenderSpinner.getSelectedItem().toString();
+        String weightString = mWeightEditText.getText().toString().trim();
+
+        if (TextUtils.isEmpty(petName) && TextUtils.isEmpty(breed) && TextUtils.isEmpty(weightString)) {
+            return;
+        }
 
         if (selectedSex == getString(R.string.gender_male)) {
             mGender = 1;
@@ -157,9 +194,13 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             mGender = 2;
         }
 
-        String weightString = mWeightEditText.getText().toString().trim();
 
-        int weight = Integer.parseInt(weightString);
+        int weight;
+        if (weightString == null || TextUtils.isEmpty(weightString)) {
+            weight = 0;
+        } else {
+            weight = Integer.parseInt(weightString);
+        }
 
         ContentValues values = new ContentValues();
         values.put(PetContract.PetEntry.COLUMN_PET_NAME, petName);
@@ -191,6 +232,33 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
     }
 
+    public void deletePet() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.delete_record);
+        builder.setPositiveButton(R.string.confirm_delete, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                int column;
+                column = getContentResolver().delete(mCurrentPetUri, null, null);
+                if (dialog != null) {
+                    dialog.dismiss();
+                    finish();
+                }
+            }
+        });
+        builder.setNegativeButton(R.string.cancel_delete, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // User clicked on a menu option in the app bar overflow menu
@@ -203,7 +271,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 return true;
             // Respond to a click on the "Delete" menu option
             case R.id.action_delete:
-                // Do nothing for now
+
+                deletePet();
                 return true;
             // Respond to a click on the "Up" arrow button in the app bar
             case android.R.id.home:
@@ -228,11 +297,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 PetContract.PetEntry.COLUMN_PET_GENDER,
                 PetContract.PetEntry.COLUMN_PET_WEIGHT
         };
-
-//        String selection = "/#";
-//        String[] selectionArgs = {
-//                  mCurrentPetUri.ge
-//        };
 
         return new CursorLoader(this, mCurrentPetUri,projection,null,null,null);
     }
@@ -279,5 +343,44 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mBreedEditText.setText("");
         mGenderSpinner.setSelection(0);
         mWeightEditText.setText("");
+    }
+
+    private void showUnsavedChangesDialog(DialogInterface.OnClickListener discardButtonClickListener) {
+        // Create an AlertDialog.Builder and set the message, and click listeners
+        // for the positive and negative buttons on the dialog.
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.unsaved_changes_message);
+        builder.setPositiveButton(R.string.discard_changes_messages, discardButtonClickListener);
+        builder.setNegativeButton(R.string.keep_editing_message, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Keep editing" button, so dismiss the dialog
+                // and continue editing the pet.
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        if (mPetHasChanged == false) {
+            super.onBackPressed();
+            return;
+        }
+
+        DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        };
+
+        showUnsavedChangesDialog(onClickListener);
     }
 }

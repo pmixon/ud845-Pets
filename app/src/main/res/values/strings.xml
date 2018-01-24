@@ -64,4 +64,11 @@
     <string name="edit_pet_title">Edit pet</string>
     <string name="pet_update_fail">Pet update failed</string>
     <string name="pet_update_success">Pet update successful</string>
+    <string name="unsaved_changes_message">You have unsaved changes</string>
+    <string name="discard_changes_messages">Discard</string>
+    <string name="keep_editing_message">Keep editing</string>
+    <string name="delete_record">Delete record?</string>
+    <string name="delete_records_all">Delete all records?</string>
+    <string name="confirm_delete">Delete</string>
+    <string name="cancel_delete">Cancel</string>
 </resources>

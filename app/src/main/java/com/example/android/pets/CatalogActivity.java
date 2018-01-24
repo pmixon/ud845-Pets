@@ -15,8 +15,10 @@
  */
 package com.example.android.pets;
 
+import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.CursorLoader;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
@@ -66,19 +68,19 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         listView.setEmptyView(emptyView);
         ListView petListView = (ListView) findViewById(R.id.list);
 
-        mPetCursorAdapter = new PetCursorAdapter(this,null);
+        mPetCursorAdapter = new PetCursorAdapter(this, null);
         petListView.setAdapter(mPetCursorAdapter);
 
         petListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Intent intent = new Intent(CatalogActivity.this, EditorActivity.class);
-                    intent.setData(Uri.withAppendedPath(PetContract.PetEntry.CONTENT_URI,String.valueOf(id)));
-                    startActivity(intent);
+                Intent intent = new Intent(CatalogActivity.this, EditorActivity.class);
+                intent.setData(Uri.withAppendedPath(PetContract.PetEntry.CONTENT_URI, String.valueOf(id)));
+                startActivity(intent);
             }
         });
 
-        getLoaderManager().initLoader(PET_LOADER,null,this);
+        getLoaderManager().initLoader(PET_LOADER, null, this);
     }
 
     @Override
@@ -99,7 +101,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
                 return true;
             // Respond to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
-                // Do nothing for now
+                deleteAllPets();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -115,7 +117,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
                 PetContract.PetEntry.COLUMN_PET_WEIGHT
         };
 
-        return new CursorLoader(this, PetContract.PetEntry.CONTENT_URI,projection,null,null,null);
+        return new CursorLoader(this, PetContract.PetEntry.CONTENT_URI, projection, null, null, null);
 
     }
 
@@ -127,5 +129,31 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mPetCursorAdapter.swapCursor(null);
+    }
+
+    public void deleteAllPets() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.delete_records_all);
+        builder.setPositiveButton(R.string.confirm_delete, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                int column;
+                column = getContentResolver().delete(PetContract.PetEntry.CONTENT_URI, null, null);
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+        builder.setNegativeButton(R.string.cancel_delete, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
     }
 }
