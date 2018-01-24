@@ -60,4 +60,8 @@
     <string name="gender_female">Female</string>
     <string name="pet_saved_message">Pet saved</string>
     <string name="error_saving_pet_message">Error with saving pet</string>
+    <string name="new_pet_title">New pet</string>
+    <string name="edit_pet_title">Edit pet</string>
+    <string name="pet_update_fail">Pet update failed</string>
+    <string name="pet_update_success">Pet update successful</string>
 </resources>
